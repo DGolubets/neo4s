@@ -80,6 +80,7 @@ class UnderlyingTransaction {
       else {
         _id.failure(exc)
       }
+      _state = TransactionState.Error
       true
     }(false)
   }
