@@ -2,6 +2,7 @@ package ru.dgolubets.neo4s
 
 import akka.http.scaladsl.model.HttpMethods
 import akka.stream.scaladsl.Source
+import ru.dgolubets.neo4s.internal.json.JsonSerializer
 import ru.dgolubets.neo4s.internal.{UnderlyingConnection, UnderlyingTransaction}
 import ru.dgolubets.neo4s.model.{CypherQuery, CypherStatement, CypherResult}
 import ru.dgolubets.neo4s.model.stream.CypherStreamMessage
@@ -11,7 +12,9 @@ import scala.concurrent.Future
 /**
  * Executes Neo4j queries in transaction.
  */
-class NeoTransaction private[neo4s] (connection: UnderlyingConnection) extends NeoContext(connection, Some(new UnderlyingTransaction)) {
+class NeoTransaction private[neo4s] (connection: UnderlyingConnection, transaction: UnderlyingTransaction = new UnderlyingTransaction)
+                                    (implicit serializer: JsonSerializer = new JsonSerializer)
+  extends NeoContext(connection, Some(transaction))(serializer) {
 
   /**
    * Commits a transaction.

@@ -10,16 +10,44 @@ import scala.collection.mutable.ListBuffer
 import scala.util.{Try, Failure, Success}
 
 /**
+ * Neo4j connection interface.
+ */
+trait UnderlyingConnection {
+
+  /**
+   * Driver managing this connection.
+   * @return
+   */
+  def driver: NeoDriver
+
+  /**
+   * Starts a request to Neo4j endpoint.
+   * @param json json to send
+   * @param uri endpoint uri
+   * @param method http method
+   * @return stream of strings
+   */
+  def request(json: String, uri: Uri, method: HttpMethod = HttpMethods.POST): Source[String, Unit]
+}
+
+object UnderlyingConnection {
+  def apply(driver: NeoDriver, host: String, port: Int, credentials: Option[NeoCredentials]): UnderlyingConnection =
+    new UnderlyingConnectionImpl(driver, host, port, credentials)
+}
+
+/**
  * Manages an HTTP connection pool to Neo4j instance.
  * @param driver driver instance
  * @param host host name
  * @param port port number
  * @param credentials credentials if any
  */
-class UnderlyingConnection(private[neo4s] val driver: NeoDriver, host: String, port: Int, credentials: Option[NeoCredentials]) extends Logging {
+private class UnderlyingConnectionImpl(val driver: NeoDriver, host: String, port: Int, credentials: Option[NeoCredentials])
+  extends UnderlyingConnection with Logging {
 
   import driver.system
   import driver.materializer
+
 
   private val cachedPool = Http().cachedHostConnectionPool[Int](host, port)
 
@@ -38,7 +66,7 @@ class UnderlyingConnection(private[neo4s] val driver: NeoDriver, host: String, p
   }
 
   /**
-   * Starts a request ot Neo4j endpoint.
+   * Starts a request to Neo4j endpoint.
    * @param json json to send
    * @param uri endpoint uri
    * @param method http method
@@ -52,11 +80,11 @@ class UnderlyingConnection(private[neo4s] val driver: NeoDriver, host: String, p
       headers = headers.toList,
       entity = HttpEntity(ContentTypes.`application/json`, json)))
       .map {
-      case Success(response) =>
-        response.entity.dataBytes
-      case Failure(err) =>
-        Source.failed(err)
-    }
+        case Success(response) =>
+          response.entity.dataBytes
+        case Failure(err) =>
+          Source.failed(err)
+      }
       .flatten(FlattenStrategy.concat)
       .map(_.decodeString("UTF-8"))
   }

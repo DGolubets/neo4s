@@ -13,7 +13,7 @@ class UnderlyingConnectionSpec extends WordSpec with Matchers with ScalaFutures 
 
   val driver = NeoDriver()
 
-  class ConnectionFailingResponses extends UnderlyingConnection(driver, "localhost", 1, None) {
+  private class ConnectionFailingResponses extends UnderlyingConnectionImpl(driver, "localhost", 1, None) {
     override protected def requestStream(request: HttpRequest): Source[Try[HttpResponse], Unit] =
       Source.single(Failure(new RuntimeException("Some error")))
   }

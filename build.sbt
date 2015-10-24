@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   // test
   "ch.qos.logback" % "logback-classic" % "1.1.1"  % "test",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test",
+  "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
   "com.typesafe.akka" %% "akka-testkit" % "2.3.14" % "test",
   "com.typesafe.akka" %% "akka-stream-testkit-experimental" % "1.0" % "test"
 )

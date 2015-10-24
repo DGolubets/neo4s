@@ -4,6 +4,7 @@ import akka.http.scaladsl.model.Uri
 import akka.stream.scaladsl._
 import play.api.libs.json._
 import ru.dgolubets.neo4s.internal._
+import ru.dgolubets.neo4s.internal.json.JsonSerializer
 import ru.dgolubets.neo4s.internal.streams.Flows
 import ru.dgolubets.neo4s.model.{CypherQuery, CypherStatement, CypherResult}
 import ru.dgolubets.neo4s.model.stream.{CypherStreamMessage, CypherStreamError, CypherStreamCommit}
@@ -15,8 +16,8 @@ import scala.concurrent.Future
  * @param transaction transaction associated with the context (if any)
  */
 class NeoContext private[neo4s](protected val connection: UnderlyingConnection,
-                                protected val transaction: Option[UnderlyingTransaction] = None) extends Logging {
-  import json.ImplicitFormats._
+                                protected val transaction: Option[UnderlyingTransaction] = None)
+                               (implicit serializer: JsonSerializer = new JsonSerializer) extends Logging {
 
   protected implicit val executionContext = connection.driver.system.dispatcher
   protected implicit val materializer = connection.driver.materializer
@@ -52,23 +53,23 @@ class NeoContext private[neo4s](protected val connection: UnderlyingConnection,
     val result = streamString(query, commit).runFold(""){(a, b) => a + b }.map { jsonString =>
       log.trace(s"Cypher result: $jsonString")
 
-      val json = Json.parse(jsonString)
+      val response = serializer.parseResponse(jsonString)
 
       // if has errors - fail transaction and this request
-      (json \ "errors").as[List[Map[String, String]]].map { error =>
-        val exc = new RuntimeException(error("message"))
+      response.errors.map { error =>
+        val exc = new RuntimeException(error.message)
         throw exc
       }
 
       // parse transaction id
       transaction.map { t =>
-        (json \ "commit").asOpt[String].map { uri =>
+        response.commit.map { uri =>
           t.tryInitialize(parseTransactionId(uri))
         }
       }
 
       // parse results
-      (json \ "results").as[List[CypherResult]]
+      response.results
     }
 
     result.onFailure {
@@ -122,7 +123,7 @@ class NeoContext private[neo4s](protected val connection: UnderlyingConnection,
   private def streamString(query: CypherQuery, commit: Boolean): Source[String, Unit] = {
     Source(requestUri(commit)).map { uri =>
       // prepare the request
-      val jsonRequest = Json.toJson(query)
+      val jsonRequest = serializer.formatRequest(query)
       connection.request(jsonRequest.toString(), uri)
     }.flatten(FlattenStrategy.concat)
   }
@@ -173,6 +174,4 @@ class NeoContext private[neo4s](protected val connection: UnderlyingConnection,
     }
   }
 }
-
-
 

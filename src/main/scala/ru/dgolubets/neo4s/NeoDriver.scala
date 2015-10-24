@@ -31,7 +31,7 @@ class NeoDriver extends AutoCloseable {
    * @return connection
    */
   def connection(host: String, port: Int): NeoConnection = {
-    new NeoConnection(new UnderlyingConnection(this, host, port, None))
+    new NeoConnection(UnderlyingConnection(this, host, port, None))
   }
 
   /**
@@ -43,7 +43,7 @@ class NeoDriver extends AutoCloseable {
    * @return connection
    */
   def connection(host: String, port: Int, username: String, password: String): NeoConnection = {
-    new NeoConnection(new UnderlyingConnection(this, host, port, Some(NeoCredentials(username, password))))
+    new NeoConnection(UnderlyingConnection(this, host, port, Some(NeoCredentials(username, password))))
   }
 
   /**

@@ -7,9 +7,15 @@ import ru.dgolubets.neo4s.model._
 /**
  * Json implicits for parsing and serializing model
  */
-private[neo4s] object ImplicitFormats extends CyFormats {
+private object ImplicitFormats extends CyFormats {
 
   // reads
+
+  implicit lazy val responseReads: Reads[CypherQueryResponse] = (
+      (JsPath \ "commit").readNullable[String] and
+      (JsPath \ "results").read[List[CypherResult]] and
+      (JsPath \ "errors").read[List[CypherError]]
+    )(CypherQueryResponse.apply _)
 
   implicit lazy val errorReads: Reads[CypherError] = (
       (JsPath \ "code").read[String] and

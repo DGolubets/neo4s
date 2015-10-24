@@ -1,5 +1,7 @@
 package ru.dgolubets.neo4s.model
 
+case class CypherQueryResponse(commit: Option[String], results: Seq[CypherResult], errors: Seq[CypherError])
+
 case class CypherError(code: String, message: String)
 
 case class CypherResult(columns: Seq[String], data: Seq[CypherResultData], stats: Option[CypherResultStats])
