@@ -46,7 +46,7 @@ class JsonStreamTransformer extends AsyncStreamTransformer[String, CypherStreamM
     }
 
     def parseResultColumns(obj: JsArray): Unit = {
-      val res = CypherStreamResultColumns(resultIndex, obj.value.map(_.toString))
+      val res = CypherStreamResultColumns(resultIndex, obj.value.map(_.as[String]))
       results.enqueue(res)
     }
 
@@ -80,8 +80,7 @@ class JsonStreamTransformer extends AsyncStreamTransformer[String, CypherStreamM
         case "errors" =>
           jsArray(jsValues(jsSimpleObject)) &>> Iteratee.foreach(parseError)
         case "results" =>
-          resultIndex += 1
-          jsArray(_ => resultIteratee) &>> Iteratee.skipToEof
+          jsArray(_ => resultIteratee.map(_ => resultIndex += 1)) &>> Iteratee.skipToEof
         case _ =>
           jsValue
       }
