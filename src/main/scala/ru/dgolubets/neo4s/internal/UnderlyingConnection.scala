@@ -7,6 +7,7 @@ import akka.stream.scaladsl._
 import ru.dgolubets.neo4s.{NeoCredentials, NeoDriver}
 
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
 import scala.util.{Try, Failure, Success}
 
 /**
@@ -28,6 +29,11 @@ trait UnderlyingConnection {
    * @return stream of strings
    */
   def request(json: String, uri: Uri, method: HttpMethod = HttpMethods.POST): Source[String, Unit]
+
+  /**
+   * Shutdowns connection.
+   */
+  def shutdown(): Future[Unit]
 }
 
 object UnderlyingConnection {
@@ -47,7 +53,6 @@ private class UnderlyingConnectionImpl(val driver: NeoDriver, host: String, port
 
   import driver.system
   import driver.materializer
-
 
   private val cachedPool = Http().cachedHostConnectionPool[Int](host, port)
 
@@ -72,7 +77,7 @@ private class UnderlyingConnectionImpl(val driver: NeoDriver, host: String, port
    * @param method http method
    * @return stream of strings
    */
-  def request(json: String, uri: Uri, method: HttpMethod = HttpMethods.POST): Source[String, Unit] = {
+  override def request(json: String, uri: Uri, method: HttpMethod = HttpMethods.POST): Source[String, Unit] = {
     log.trace(s"Cypher request: $method $uri $json")
     requestStream(HttpRequest(
       method = method,
@@ -87,5 +92,16 @@ private class UnderlyingConnectionImpl(val driver: NeoDriver, host: String, port
       }
       .flatten(FlattenStrategy.concat)
       .map(_.decodeString("UTF-8"))
+  }
+
+  /**
+   * Shutdowns connection.
+   */
+  override def shutdown(): Future[Unit] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    // obtain materialized value of connection pool
+    val pool = Source.empty.viaMat(cachedPool)(Keep.right).to(Sink.head).run()
+    pool.shutdown()
   }
 }
