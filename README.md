@@ -11,7 +11,7 @@ The goal of this driver is to allow you everything Neo4j transactional endpoint 
 
 # Setup
 ```
-libraryDependencies += "ru.dgolubets" %% "neo4s" % "0.1.0"
+libraryDependencies += "ru.dgolubets" %% "neo4s" % "0.1.1"
 ```
 
 # Simple query

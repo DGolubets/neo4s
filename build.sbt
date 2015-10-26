@@ -2,7 +2,7 @@ name := "neo4s"
 
 organization := "ru.dgolubets"
 
-version := "0.1.1-SNAPSHOT"
+version := "0.1.1"
 
 scalaVersion := "2.11.7"
 
