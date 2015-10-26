@@ -1,15 +1,10 @@
 package ru.dgolubets.neo4s.internal
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.SpanSugar
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import ru.dgolubets.neo4s.NeoDriver
+import org.scalatest.{Matchers, WordSpec}
 
 import scala.util.{Failure, Success}
 
-class UnderlyingTransactionSpec extends WordSpec with Matchers with ScalaFutures with SpanSugar with BeforeAndAfterAll {
-
-  val driver = NeoDriver()
+class UnderlyingTransactionSpec extends WordSpec with Matchers {
 
   "UnderlyingTransaction" should {
 
@@ -80,9 +75,5 @@ class UnderlyingTransactionSpec extends WordSpec with Matchers with ScalaFutures
 
       transaction.state shouldBe TransactionState.Commited
     }
-  }
-
-  override def afterAll: Unit = {
-    driver.shutdown()
   }
 }
