@@ -8,7 +8,6 @@ import ru.dgolubets.neo4s.internal.json.JsonSerializer
   * @param connection underlying connection
   */
 class NeoConnection private[neo4s](connection: UnderlyingConnection)
-                                  (implicit serializer: JsonSerializer = new JsonSerializer)
   extends NeoContext(connection) {
 
   /**

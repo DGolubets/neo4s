@@ -24,7 +24,10 @@ class NeoConnectionSpec extends WordSpec with Matchers with ScalaFutures with Sp
 
     (connection.driver _).expects().anyNumberOfTimes().returns(driver)
 
-    val context = new NeoConnection(connection)(serializer)
+    class TestNeoConnection extends NeoConnection(connection) {
+      override protected val jsonSerializer: JsonSerializer = serializer
+    }
+    val context = new TestNeoConnection
   }
 
   "NeoConnection" should {

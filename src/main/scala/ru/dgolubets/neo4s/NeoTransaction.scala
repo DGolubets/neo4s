@@ -13,8 +13,7 @@ import scala.concurrent.Future
  * Executes Neo4j queries in transaction.
  */
 class NeoTransaction private[neo4s] (connection: UnderlyingConnection, transaction: UnderlyingTransaction = new UnderlyingTransaction)
-                                    (implicit serializer: JsonSerializer = new JsonSerializer)
-  extends NeoContext(connection, Some(transaction))(serializer) {
+  extends NeoContext(connection, Some(transaction)) {
 
   /**
    * Commits a transaction.
